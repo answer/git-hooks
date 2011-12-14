@@ -19,7 +19,9 @@ if [ -z "$refname" -o -z "$oldrev" -o -z "$newrev" ]; then
 fi
 
 # --- Config
-denycommits=$(git config --get-all hooks.denycommit)
+denyconfig=hooks.denycommit
+denywatchbranches=$(git config --get-all hooks.denywatchbranch)
+denycommits=$(git config --get-all "$denyconfig")
 
 # --- Check types
 # if $newrev is 0000...0000, it's a commit to delete a ref.
@@ -33,10 +35,37 @@ fi
 case "$refname","$newrev_type" in
 	refs/heads/master,commit)
 		for denycommit in $denycommits; do
-			if [ -n `git rev-list "$newrev" | grep "${denycommit##*:}"` ]; then
+			denyexist=`git rev-list "$oldrev".."$newrev" | grep "${denycommit##*:}"`
+			if [ -n "$denyexist" ]; then
 				echo "*** INCLUDE NOT ALLOWED COMMIT : [$denycommit]" >&2
 				exit 1
 			fi
+		done
+		;;
+	refs/heads/*,commit)
+		short_refname=${refname##refs/heads/}
+		if [ "$oldrev" = "$zero" ]; then
+			# create branch
+			for denywatchbranch in $denywatchbranches; do
+				case "$denywatchbranch" in
+					"$short_refname")
+						if [ -z `git config --get "$denyconfig" "$short_refname:.*"` ]; then
+							git config --add "$denyconfig" "$short_refname:$newrev"
+						fi
+						;;
+				esac
+			done
+		fi
+		;;
+	refs/heads/*,delete)
+		short_refname=${refname##refs/heads/}
+		# delete branch
+		for denywatchbranch in $denywatchbranches; do
+			case "$denywatchbranch" in
+				"$short_refname")
+					git config --unset "$denyconfig" "$short_refname:.*"
+					;;
+			esac
 		done
 		;;
 esac
