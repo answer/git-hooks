@@ -4,6 +4,8 @@ hook 集
 
 == update
 
+設定はサーバーのリポジトリに行うことに注意
+
 === denycommits
 
 hooks.denycommit に列挙したコミットを master に受け付けないようにする
