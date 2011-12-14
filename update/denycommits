@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# --- Command line
+refname="$1"
+oldrev="$2"
+newrev="$3"
+
+# --- Safety check
+if [ -z "$GIT_DIR" ]; then
+	echo "Don't run this script from the command line." >&2
+	echo " (if you want, you could supply GIT_DIR then run" >&2
+	echo "  $0 <ref> <oldrev> <newrev>)" >&2
+	exit 1
+fi
+
+if [ -z "$refname" -o -z "$oldrev" -o -z "$newrev" ]; then
+	echo "Usage: $0 <ref> <oldrev> <newrev>" >&2
+	exit 1
+fi
+
+# --- Config
+denycommits=$(git config --get-all hooks.denycommit)
+
+# --- Check types
+# if $newrev is 0000...0000, it's a commit to delete a ref.
+zero="0000000000000000000000000000000000000000"
+if [ "$newrev" = "$zero" ]; then
+	newrev_type=delete
+else
+	newrev_type=$(git cat-file -t $newrev)
+fi
+
+case "$refname","$newrev_type" in
+	refs/heads/master,commit)
+		for denycommit in $denycommits; do
+			if [ -n `git rev-list "$newrev" | grep "${denycommit##*:}"` ]; then
+				echo "*** INCLUDE NOT ALLOWED COMMIT : [$denycommit]" >&2
+				exit 1
+			fi
+		done
+		;;
+esac
+
+# --- Finished
+exit 0
