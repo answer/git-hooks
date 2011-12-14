@@ -8,14 +8,12 @@ hook 集
 
 === denycommits
 
-hooks.denycommit に列挙したコミットを master に受け付けないようにする
+特定のコミットを master に受け付けないようにする
 
  [hooks]
-   denycommit = "ブランチ名:コミットSHA-1"
+   denywatchbranch = "ブランチ名"
 
-ブランチ名とコミット番号をコロン : で区切って指定する
+denywatchbranch に指定したブランチを作成すると、その時の最新のコミットを master に受け付けなくなる
 
-ブランチ名は省略可能
-
-reject されたときにこの文字列が表示されるので、ブランチ名を含めたほうがエラーメッセージがわかりやすくなる
+そのブランチを削除すると、 master に受け取ってもらえるようになる
 
