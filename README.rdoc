@@ -1,1 +1,19 @@
 = git-hooks
+
+hook 集
+
+== update
+
+=== denycommits
+
+hooks.denycommit に列挙したコミットを master に受け付けないようにする
+
+ [hooks]
+   denycommit = "ブランチ名:コミットSHA-1"
+
+ブランチ名とコミット番号をコロン : で区切って指定する
+
+ブランチ名は省略可能
+
+reject されたときにこの文字列が表示されるので、ブランチ名を含めたほうがエラーメッセージがわかりやすくなる
+
